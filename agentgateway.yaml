@@ -1,0 +1,17 @@
+binds:
+  - port: 8080
+    listeners:
+      - routes:
+          # 1. MCP Tool Route (Proxies to mcp_server.py)
+          - matches:
+              - path:
+                  pathPrefix: /mcp
+            backends:
+              - host: "localhost:5000"
+          
+          # 2. A2A Route (Proxies to qa_agent.py)
+          - matches:
+              - path:
+                  pathPrefix: /a2a
+            backends:
+              - host: "localhost:8081"

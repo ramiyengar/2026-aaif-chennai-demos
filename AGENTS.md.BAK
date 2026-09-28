@@ -1,0 +1,12 @@
+# Agent Instructions for User Service
+
+## Architecture Rules
+- We use Python 3.12+ and FastAPI for all endpoints.
+- DO NOT use ORMs; use raw SQL with parameterized queries.
+
+## Security Constraints
+- All database queries MUST be routed through the `user-db-mcp` tool. Do not create local sqlite databases.
+- After completing a new feature or endpoint, you MUST hand off the code for review to the QA Agent via the A2A protocol endpoint `http://localhost:8080/a2a/qa-agent`.
+
+## Context
+This microservice handles user authentication and profile retrieval.

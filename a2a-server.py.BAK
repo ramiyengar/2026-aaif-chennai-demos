@@ -1,0 +1,88 @@
+import asyncio
+from fastapi import FastAPI
+from a2a.server.agent_execution import AgentExecutor, RequestContext
+from a2a.server.events import EventQueue
+from a2a.server.tasks import TaskUpdater
+from a2a.types import TaskState, Part, AgentCard, AgentProvider, AgentCapabilities, AgentSkill, AgentInterface
+from a2a.helpers import new_text_message, new_task
+
+# 1. Define the cryptographic/metadata contract (Agent Card)
+# This dictates exactly how routing orchestrators discover the agent.
+local_agent_card = AgentCard(
+    name="Local Intelligence Agent",
+    description="An autonomous agent executing reasoning tasks via local LLM infrastructure.",
+    version="1.0.0",
+    provider=AgentProvider(organization="Local Labs", url="http://localhost:8000"),
+    capabilities=AgentCapabilities(streaming=True, push_notifications=False),
+    default_input_modes=["text/plain"],
+    default_output_modes=["text/plain"],
+    skills=[
+        AgentSkill(
+            id="local_reasoning",
+            name="General Reasoning",
+            description="Analyzes input text and generates structured insights.",
+            tags=["analysis", "local", "reasoning"]
+        )
+    ],
+    supported_interfaces=[
+        AgentInterface(
+            protocol_binding="HTTP+JSON",
+            protocol_version="1.0",
+            url="http://localhost:8000/a2a"
+        )
+    ]
+)
+
+# 2. Implement the A2A Executor Bridge
+class LocalAgentExecutor(AgentExecutor):
+    async def execute(self, context: RequestContext, event_queue: EventQueue) -> None:
+        """
+        Manages the A2A task lifecycle, transitioning states and dispatching artifacts.
+        """
+        # Extract the user's input payload from the A2A message parts
+        query = context.get_user_input()
+        
+        # Initialize a new A2A Task state machine to track execution
+        task = context.current_task or new_task(context.message)
+        await event_queue.enqueue_event(task)
+        
+        # Wrap the task in an updater utility for robust state transitions
+        updater = TaskUpdater(event_queue, task.id, task.context_id)
+        
+        # State Transition: Acknowledge that the agent is actively processing
+        await updater.update_status(
+            TaskState.working,
+            new_text_message("Agent is analyzing the request locally...", task.context_id, task.id)
+        )
+        
+        # Simulate local LLM processing delay (e.g., via Ollama/LangGraph execution)
+        await asyncio.sleep(2.0)
+        simulated_llm_response = f"Processed insight regarding: '{query}'"
+        
+        # Attach the final generative output as a tangible A2A Artifact
+        artifact_part = Part(text=simulated_llm_response)
+        await updater.add_artifact([artifact_part], name="analysis_result")
+        
+        # State Transition: Irrevocably mark the task as COMPLETED
+        await updater.complete()
+
+# 3. Expose the Agent via HTTP endpoint
+#app = FastAPI()
+
+# In a production environment, the SDK's router is mounted to handle all JSON-RPC/HTTP POST requests.
+# This automatically serves the Agent Card at the IANA-registered path `/.well-known/agent-card.json`.
+#from a2a.server.fastapi import A2ARouter
+from fastapi import FastAPI
+from a2a.server.routes import (
+    create_agent_card_routes,
+    create_jsonrpc_routes,
+    create_rest_routes,
+)
+
+app = FastAPI()
+a2a_router = A2ARouter(executor=LocalAgentExecutor(), agent_card=local_agent_card)
+app.include_router(a2a_router, prefix="/a2a")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)

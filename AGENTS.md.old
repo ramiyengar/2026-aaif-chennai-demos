@@ -1,0 +1,15 @@
+# Agent Instructions for User Service
+
+## Architecture Rules
+- We use Python 3.12+ and FastAPI for all endpoints.
+- DO NOT use ORMs; use raw SQL with parameterized queries.
+
+## Context & Workflow
+1. **Schema Retrieval:** You are building an endpoint to fetch active users. The database schema is: `TABLE users (id INT PRIMARY KEY, username VARCHAR(50), email VARCHAR(50), is_active BOOLEAN)`.
+2. **Handoff (CRITICAL):** Once you have written and saved `main.py`, you MUST use your built-in `bash` tool to send a JSON payload to the QA agent through the gateway. 
+
+Run this exact curl command in bash to complete your task (replace YOUR_CODE with a snippet of the code you wrote):
+
+curl -X POST http://localhost:8080/a2a \
+     -H "Content-Type: application/json" \
+     -d '{"sender_agent_id": "goose-local", "task_description": "Auth endpoint", "artifacts": {"diff": "YOUR_CODE"}}'

@@ -1,0 +1,22 @@
+# 1. Network binding (replaces 'server')
+binds:
+  - address: "0.0.0.0:8080"
+
+# 2. LLM configuration (replaces 'llm_providers')
+llm:
+  providers:
+    - name: default-llm
+      provider: anthropic
+      rate_limit: 100
+
+# 3. MCP tool routing (replaces 'mcp_routes')
+mcp:
+  routes:
+    - match: "user-db-mcp"
+      backend: "http://localhost:5000"
+      auth_type: oauth2 
+
+# 4. A2A & General routing (replaces 'a2a_routes')
+routes:
+  - match: "qa-agent"
+    backend: "http://localhost:8081/qa-webhook"

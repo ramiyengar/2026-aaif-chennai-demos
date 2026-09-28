@@ -1,0 +1,45 @@
+version: 1.0.0
+title: "Parallel Full-Stack Orchestrator"
+description: "Spawns parallel subagents for backend, frontend, and QA."
+
+instructions: |
+  You are the Lead PM Agent for BugzBunnie. 
+  Delegate the following tasks to specialized subagents using parallel execution via the `delegate` tool.
+
+  === SUBAGENT 1: Backend ===
+  - Init backend for BugzBunnie using Flask Python.
+  - Generate core API routes and a basic local DB connection.
+  - The local db can be an sqlite.
+  - Save progress and output `backend_summary.md`.
+
+  === SUBAGENT 2: Frontend ===
+  - Create frontend UI for BugzBunnie using React.
+  - Configure UI to hit the backend endpoints.
+  - Save progress and output `frontend_summary.md`.
+
+  === SUBAGENT 3: QA & Docs ===
+  - Write `README.md` for BugzBunnie detailing setup.
+  - Generate a `test_suite` file with basic unit tests.
+  
+  Wait for all subagents to finish in the background, then combine their outputs into a final `project_board.md` file.
+
+prompt: "Initialize project: BugzBunnie | Backend: Python Flask | Frontend: React."
+
+parameters:
+  - key: project_name
+    input_type: string
+    requirement: required
+  - key: backend_framework
+    input_type: string
+    requirement: optional
+    default: "Node.js/Express"
+  - key: frontend_framework
+    input_type: string
+    requirement: optional
+    default: "React"
+
+extensions:
+  - type: platform
+    name: summon
+  - type: builtin
+    name: developer

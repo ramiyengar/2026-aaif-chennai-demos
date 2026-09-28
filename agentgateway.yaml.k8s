@@ -1,0 +1,28 @@
+apiVersion: gateway.agentgateway.dev/v1
+kind: AgentRoute
+metadata:
+  name: demo-agent-routing
+spec:
+  # 1. Proxy LLM requests from Goose to the provider
+  llm_providers:
+    - name: default-llm
+      provider: anthropic
+      rate_limit: 100_requests_per_minute
+
+  # 2. Manage MCP Tools
+  mcp_routes:
+    - match:
+        tool_name_prefix: "user-db-mcp"
+      backend:
+        url: "http://localhost:5000" # Where our Python MCP server is running
+      auth:
+        type: oauth2 # Enforce authentication on the tool
+
+  # 3. Route Agent2Agent (A2A) Handoffs
+  a2a_routes:
+    - match:
+        target_agent: "qa-agent"
+      backend:
+        url: "http://localhost:8081/qa-webhook"
+      observability:
+        record_payload: true

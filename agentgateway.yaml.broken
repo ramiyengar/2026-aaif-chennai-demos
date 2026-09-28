@@ -1,0 +1,24 @@
+# Standalone agentgateway configuration
+server:
+  port: 8080
+
+llm_providers:
+  - name: default-llm
+    provider: anthropic
+    rate_limit: 100_requests_per_minute
+
+mcp_routes:
+  - match:
+      tool_name_prefix: "user-db-mcp"
+    backend:
+      url: "http://localhost:5000"
+    auth:
+      type: oauth2 
+
+a2a_routes:
+  - match:
+      target_agent: "qa-agent"
+    backend:
+      url: "http://localhost:8081/qa-webhook"
+    observability:
+      record_payload: true
